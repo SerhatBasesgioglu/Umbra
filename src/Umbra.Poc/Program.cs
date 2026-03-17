@@ -8,11 +8,16 @@ builder
     .WithMetrics(builder =>
     {
         builder.AddPrometheusExporter();
-        builder.AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
+        builder.AddMeter(
+            "Microsoft.AspNetCore.Hosting",
+            "Microsoft.AspNetCore.Server.Kestrel",
+            "Umbra.Poc.Ado"
+        );
     });
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<AdoMetrics>();
 
 var app = builder.Build();
 
