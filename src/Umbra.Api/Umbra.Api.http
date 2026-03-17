@@ -1,6 +1,0 @@
-@Umbra.Api_HostAddress = http://localhost:5089
-
-GET {{Umbra.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
