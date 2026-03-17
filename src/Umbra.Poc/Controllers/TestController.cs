@@ -16,13 +16,16 @@ public class TestController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<object> Get()
+    public async Task<List<PipelineRun>> Get()
     {
         // var response = await _client.GetAsync<AdoList<PipelineRun>>(
         //  _endpoint
         // );
-        var responseTest = await _client.GetAsync<AdoList<object>>(_endpoint);
+        var response = await _client.GetAsync<AdoList<PipelineRun>>(_endpoint);
+        var runs = response.Value;
+        Console.WriteLine("yo");
+        
 
-        return responseTest;
+        return runs;
     }
 }
