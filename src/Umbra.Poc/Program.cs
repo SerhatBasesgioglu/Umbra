@@ -2,6 +2,7 @@ using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile("appsettings.json");
 builder
     .Services.AddOpenTelemetry()
     .WithMetrics(builder =>

@@ -2,6 +2,8 @@ obj
 bin
 .vs
 
+appsettings.json
+appsettings.Development.json
 
 #For container persistance
 container-data

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Umbra.Poc.Controllers;
 
@@ -7,9 +6,23 @@ namespace Umbra.Poc.Controllers;
 [ApiController]
 public class TestController : ControllerBase
 {
-    [HttpGet]
-    public async Task<string> Get()
+    private readonly AzureDevOpsHttpClient _client;
+    private readonly string _endpoint;
+
+    public TestController(IConfiguration config)
     {
-        return "yo";
+        _client = new AzureDevOpsHttpClient(config);
+        _endpoint = config["ado:endpoint"];
+    }
+
+    [HttpGet]
+    public async Task<object> Get()
+    {
+        // var response = await _client.GetAsync<AdoList<PipelineRun>>(
+        //  _endpoint
+        // );
+        var responseTest = await _client.GetAsync<AdoList<object>>(_endpoint);
+
+        return responseTest;
     }
 }
