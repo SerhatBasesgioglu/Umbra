@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 
 public class AdoMetrics
@@ -5,6 +6,7 @@ public class AdoMetrics
     private readonly Counter<long> _runsProcessedCounter;
     private readonly ObservableGauge<int> _totalRunsGauge;
     private int _currentTotalCount;
+    private readonly ConcurrentDictionary<int, int> _lastSeenRuns = new();
 
     public AdoMetrics(IMeterFactory meterFactory)
     {
@@ -26,6 +28,18 @@ public class AdoMetrics
     public void IncrementProcessed(string result)
     {
         _runsProcessedCounter.Add(1, new KeyValuePair<string, object?>("result", result));
+    }
+    
+    public void ProcessNewRuns(int pipelineId, IEnumerable<PipelineRunDto> runs, string projectName)
+    {
+        _lastSeenRuns.TryGetValue(pipelineId, out int lastProcessedId);
+        var newRuns = runs.Where(r => r.Id > lastProcessedId).OrderBy(r => r.Id);
+
+        foreach (var run in newRuns)
+        {
+            _runsProcessedCounter.Add(1, new KeyValuePair<string, object?>("result", run.Result), new KeyValuePair<string, object?>("project", projectName));
+            _lastSeenRuns[pipelineId] = run.Id;
+        }
     }
 
     public void SetTotalCount(int count)
