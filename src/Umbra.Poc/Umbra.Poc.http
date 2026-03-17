@@ -1,0 +1,6 @@
+@Umbra.Poc_HostAddress = http://localhost:5147
+
+GET {{Umbra.Poc_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
