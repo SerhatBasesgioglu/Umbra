@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Umbra.Poc.Dump;
 
 namespace Umbra.Poc.Controllers;
 
@@ -6,57 +7,17 @@ namespace Umbra.Poc.Controllers;
 [ApiController]
 public class TestController : ControllerBase
 {
-    private readonly AzureDevOpsHttpClient _client;
-    private readonly AdoMetrics _metrics;
-    private readonly string _endpoint;
-    private readonly string _project1;
-    private readonly string _project2;
+    private readonly PipelineFetcher _fetcher;
 
-    public TestController(IConfiguration config, AdoMetrics metrics)
+    public TestController(PipelineFetcher fetcher)
     {
-        _client = new AzureDevOpsHttpClient(config);
-        _metrics = metrics;
-        _endpoint = config["ado:endpoint"];
-        _project1 = config["ado:project1"];
-        _project2 = config["ado:project2"];
+        _fetcher = fetcher;
     }
 
     [HttpGet]
-    public async Task<List<PipelineRunDto>> Get()
+    public async Task<string> Get()
     {
-        // var response = await _client.GetAsync<AdoList<PipelineRun>>(
-        //  _endpoint
-        // );
-        var projectResponse = await _client.GetAsync<AdoList<ProjectDto>>("_apis/projects?$top=1000");
-        var projects = projectResponse.Value;
-        var count = 0;
-        foreach (var project in projects)
-        {
-            if (project.Name != _project1 && project.Name != _project2) continue;
-            var pipelineResponse = await _client.GetAsync<AdoList<PipelineDto>>(
-                $"{project.Id}/_apis/pipelines"
-            );
-            if (pipelineResponse.Count == 0)
-                continue;
-
-            var pipelines = pipelineResponse.Value;
-
-            foreach (var pipeline in pipelines)
-            {
-                // Console.WriteLine(pipeline.Name);
-                var pipelineRunResponse = await _client.GetAsync<AdoList<PipelineRunDto>>(
-                    $"{project.Id}/_apis/pipelines/{pipeline.Id}/runs?$top=10"
-                );
-
-                if (pipelineRunResponse.Count == 0)
-                    continue;
-                var pipelineRuns = pipelineRunResponse.Value;
-                _metrics.ProcessNewRuns(pipeline.Id, pipelineRuns, project.Name);
-                count += pipelineRunResponse.Count;
-            }
-        }
-        Console.WriteLine(count);
-
-        return null;
+        _fetcher.Fetch();
+        return "Fetched";
     }
 }

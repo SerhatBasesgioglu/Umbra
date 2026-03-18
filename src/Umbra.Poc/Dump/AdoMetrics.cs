@@ -4,9 +4,7 @@ using System.Diagnostics.Metrics;
 public class AdoMetrics
 {
     private readonly Counter<long> _runsProcessedCounter;
-    private readonly ObservableGauge<int> _totalRunsGauge;
-    private int _currentTotalCount;
-    private readonly ConcurrentDictionary<int, int> _lastSeenRuns = new();
+    private readonly ConcurrentDictionary<string, int> _lastSeenRuns = new();
 
     public AdoMetrics(IMeterFactory meterFactory)
     {
@@ -14,36 +12,23 @@ public class AdoMetrics
         _runsProcessedCounter = meter.CreateCounter<long>(
             "ado_runs_processed_total",
             unit: "{run}",
-            description: "Total number of  runs seen by scraper"
+            description: "Total number of runs seen by scraper"
         );
 
-        _totalRunsGauge = meter.CreateObservableGauge(
-            "ado_pipeline_total_count",
-            () => _currentTotalCount,
-            unit: "{run}",
-            description: "The current total count of runs in the pipeline"
-        );
-    }
-
-    public void IncrementProcessed(string result)
-    {
-        _runsProcessedCounter.Add(1, new KeyValuePair<string, object?>("result", result));
     }
     
-    public void ProcessNewRuns(int pipelineId, IEnumerable<PipelineRunDto> runs, string projectName)
+    public void ProcessNewRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
-        _lastSeenRuns.TryGetValue(pipelineId, out int lastProcessedId);
-        var newRuns = runs.Where(r => r.Id > lastProcessedId).OrderBy(r => r.Id);
+        var sortedRuns = runs.OrderBy(r => r.Id).ToList();
+        _lastSeenRuns.TryGetValue(project.Id, out int lastProcessedId);
+        var newRuns = runs.Where(r => r.Id > lastProcessedId).OrderBy(r => r.Id).ToList();
 
         foreach (var run in newRuns)
         {
-            _runsProcessedCounter.Add(1, new KeyValuePair<string, object?>("result", run.Result), new KeyValuePair<string, object?>("project", projectName));
-            _lastSeenRuns[pipelineId] = run.Id;
+            _runsProcessedCounter.Add(1, new KeyValuePair<string, object?>("result", run.Result),
+                new KeyValuePair<string, object?>("project", project.Name),
+                new KeyValuePair<string, object?>("pipeline", run.Definition.Name));
+            _lastSeenRuns[project.Id] = run.Id;
         }
-    }
-
-    public void SetTotalCount(int count)
-    {
-        _currentTotalCount = count;
     }
 }

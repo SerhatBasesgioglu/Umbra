@@ -1,4 +1,5 @@
 using OpenTelemetry.Metrics;
+using Umbra.Poc.Dump;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<AdoMetrics>();
+builder.Services.AddTransient<PipelineFetcher>();
 
 var app = builder.Build();
 
