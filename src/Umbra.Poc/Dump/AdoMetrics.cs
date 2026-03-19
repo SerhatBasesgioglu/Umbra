@@ -1,3 +1,4 @@
+using OpenTelemetry.Trace;
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 
@@ -6,7 +7,8 @@ namespace Umbra.Poc.Dump;
 public class AdoMetrics
 {
     private readonly Counter<long> _runsProcessedCounter;
-    private readonly ConcurrentDictionary<string, int> _lastSeenRuns = new();
+    private readonly Gauge<int> _runsUnfinishedGauge;
+    private readonly ConcurrentDictionary<int, DateTime> _processedRuns = new();
     private readonly Gauge<int> _workItemGauge;
 
     public AdoMetrics(IMeterFactory meterFactory)
@@ -18,6 +20,12 @@ public class AdoMetrics
             description: "Total number of runs seen by scraper"
         );
 
+        _runsUnfinishedGauge = meter.CreateGauge<int>(
+            "ado_runs_unfinished_count",
+            unit: "{run}",
+            description: "Current count of unfinished runs"
+        );
+
         _workItemGauge = meter.CreateGauge<int>(
             "ado_pbi_state_count",
             unit: "{items}",
@@ -25,11 +33,23 @@ public class AdoMetrics
         );
     }
 
-    public void ProcessNewRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
+    private void ProcessUnFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
-        var sortedRuns = runs.OrderBy(r => r.Id).ToList();
-        _lastSeenRuns.TryGetValue(project.Id, out int lastProcessedId);
-        var newRuns = sortedRuns.Where(r => r.Id > lastProcessedId).OrderBy(r => r.Id).ToList();
+        var stateTotals = runs.GroupBy(r => r.Status)
+            .Select(g => new {Status = g.Key, Count = g.Count() });
+
+        foreach ( var group in stateTotals)
+        {
+            _runsUnfinishedGauge.Record(
+                group.Count,
+                new KeyValuePair<string, object?>("project", project.Name)
+            );
+        }
+    }
+    private void ProcessFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
+    {
+        var now = DateTime.UtcNow;
+        var newRuns = runs.Where(r => !_processedRuns.ContainsKey(r.Id)).ToList();
 
         foreach (var run in newRuns)
         {
@@ -40,8 +60,21 @@ public class AdoMetrics
                 new KeyValuePair<string, object?>("project", project.Name),
                 new KeyValuePair<string, object?>("pipeline", pipelineName)
             );
-            _lastSeenRuns[project.Id] = run.Id;
+            _processedRuns.TryAdd(run.Id, run.FinishTime);
         }
+
+        var cutoff = now.AddHours(-12);
+        var expiredRuns = _processedRuns.Where(kvp => kvp.Value < cutoff).Select(kvp => kvp.Key).ToList();
+        foreach (var run in expiredRuns)
+        {
+            _processedRuns.TryRemove(run, out _);
+        }
+    }
+
+    public void ProcessRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs, IEnumerable<PipelineRunDto> unfinishedRuns)
+    {
+        ProcessFinishedRuns(project, runs);
+        ProcessUnFinishedRuns(project, unfinishedRuns);
     }
 
     public void ProcessWorkItems(List<WorkItemDto> workItems)
