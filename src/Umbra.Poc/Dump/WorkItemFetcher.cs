@@ -55,7 +55,6 @@ public class WorkItemFetcher : BackgroundService
             );
             var workItems = workItemResult.Value;
             allWorkItems.AddRange(workItems);
-            
         }
 
         _metrics.ProcessWorkItems(allWorkItems);

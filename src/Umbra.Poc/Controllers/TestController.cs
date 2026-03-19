@@ -19,8 +19,8 @@ public class TestController : ControllerBase
     [HttpGet]
     public async Task<string> Get()
     {
-        //await _pipelineFetcher.Fetch();
-        await _workItemFetcher.Fetch();
+        await _pipelineFetcher.Fetch();
+        //await _workItemFetcher.Fetch();
         return "Fetched";
     }
 }

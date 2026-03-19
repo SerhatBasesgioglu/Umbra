@@ -37,7 +37,7 @@ public class PipelineFetcher : BackgroundService
         var count = 0;
         foreach (var project in projects)
         {
-            //if (project.Name != _project1 && project.Name != _project2) continue;
+            //if (project.Name != "Sandbox") continue;
             Console.WriteLine($"Processing {project.Name}");
             var pipelineResponse = await _client.GetAsync<AdoList<PipelineDto>>(
                 $"{project.Id}/_apis/build/definitions"
@@ -46,14 +46,26 @@ public class PipelineFetcher : BackgroundService
                 continue;
             var pipelines = pipelineResponse.Value;
 
-            string minTime = DateTime.UtcNow.AddMinutes(-15).ToString("yyyy-MM-ddTHH:mm:ssZ");
+            //Cok data dondurmemek icin mintime parametresi var, ama bitmemis runlar cok once baslamis olabilir. Bu nedenle completed ve
+            //noncompleted runlar farkli query ile donduruluyor. noncompleted az oldugu icin zaman filtesine gerek yok.
+            string minTime = DateTime.UtcNow.AddMinutes(-10).ToString("yyyy-MM-ddTHH:mm:ssZ");
             var pipelineRunResponse = await _client.GetAsync<AdoList<PipelineRunDto>>(
-                $"{project.Id}/_apis/build/builds?$top=50&minTime={minTime}"
+                $"{project.Id}/_apis/build/builds?statusFilter=completed&minTime={minTime}&queryOrder=finishTimeAscending"
             );
-            if (pipelineRunResponse.Count == 0)
-                continue;
+
+            var unfinishedPipelineRunResponse = await _client.GetAsync<AdoList<PipelineRunDto>>(
+                $"{project.Id}/_apis/build/builds?statusFilter=inProgress,cancelling,postponed,notStarted"
+            );
+
             var pipelineRuns = pipelineRunResponse.Value;
-            _metrics.ProcessNewRuns(project, pipelineRuns);
+            var unfinishedPipelineRuns = unfinishedPipelineRunResponse.Value;
+
+            var allRuns = pipelineRuns
+                .Concat(unfinishedPipelineRuns)
+                .DistinctBy(r => r.Id)
+                .ToList();
+
+            _metrics.ProcessRuns(project, pipelineRuns, unfinishedPipelineRuns);
             count += pipelineRunResponse.Count;
         }
         Console.WriteLine(count);
