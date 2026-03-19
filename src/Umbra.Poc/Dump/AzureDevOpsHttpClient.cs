@@ -32,4 +32,17 @@ public class AzureDevOpsHttpClient
         var value = JsonSerializer.Deserialize<T>(json, options);
         return value;
     }
+
+    public async Task<T> PostAsync<T>(string requestUri, object body)
+        where T : class
+    {
+        var jsonPayload = JsonSerializer.Serialize(body, options);
+        var content = new StringContent(jsonPayload, System.Text.Encoding.UTF8, "application/json");
+        var response = await _http.PostAsync(requestUri, content);
+        response.EnsureSuccessStatusCode();
+
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        var value = JsonSerializer.Deserialize<T>(jsonResponse, options);
+        return value;
+    }
 }

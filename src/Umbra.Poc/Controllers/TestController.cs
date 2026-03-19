@@ -7,17 +7,20 @@ namespace Umbra.Poc.Controllers;
 [ApiController]
 public class TestController : ControllerBase
 {
-    private readonly PipelineFetcher _fetcher;
+    private readonly PipelineFetcher _pipelineFetcher;
+    private readonly WorkItemFetcher _workItemFetcher;
 
-    public TestController(PipelineFetcher fetcher)
+    public TestController(PipelineFetcher pipelineFetcher, WorkItemFetcher workItemFetcher)
     {
-        _fetcher = fetcher;
+        _workItemFetcher = workItemFetcher;
+        _pipelineFetcher = pipelineFetcher;
     }
 
     [HttpGet]
     public async Task<string> Get()
     {
-        _fetcher.Fetch();
+        //await _pipelineFetcher.Fetch();
+        await _workItemFetcher.Fetch();
         return "Fetched";
     }
 }

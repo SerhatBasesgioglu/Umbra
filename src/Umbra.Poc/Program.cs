@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using OpenTelemetry.Metrics;
 using Umbra.Poc.Dump;
 
@@ -19,7 +20,10 @@ builder
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<AdoMetrics>();
-builder.Services.AddTransient<PipelineFetcher>();
+builder.Services.AddSingleton<PipelineFetcher>();
+builder.Services.AddSingleton<WorkItemFetcher>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<PipelineFetcher>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<WorkItemFetcher>());
 
 var app = builder.Build();
 
