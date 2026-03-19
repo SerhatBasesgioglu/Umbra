@@ -46,7 +46,6 @@ public class PipelineFetcher : BackgroundService
                 continue;
             var pipelines = pipelineResponse.Value;
 
-
             //Cok data dondurmemek icin mintime parametresi var, ama bitmemis runlar cok once baslamis olabilir. Bu nedenle completed ve
             //noncompleted runlar farkli query ile donduruluyor. noncompleted az oldugu icin zaman filtesine gerek yok.
             string minTime = DateTime.UtcNow.AddMinutes(-10).ToString("yyyy-MM-ddTHH:mm:ssZ");
@@ -61,9 +60,12 @@ public class PipelineFetcher : BackgroundService
             var pipelineRuns = pipelineRunResponse.Value;
             var unfinishedPipelineRuns = unfinishedPipelineRunResponse.Value;
 
-            var allRuns = pipelineRuns.Concat(unfinishedPipelineRuns).DistinctBy(r => r.Id).ToList();
+            var allRuns = pipelineRuns
+                .Concat(unfinishedPipelineRuns)
+                .DistinctBy(r => r.Id)
+                .ToList();
 
-            _metrics.ProcessRuns(project,pipelineRuns, unfinishedPipelineRuns);
+            _metrics.ProcessRuns(project, pipelineRuns, unfinishedPipelineRuns);
             count += pipelineRunResponse.Count;
         }
         Console.WriteLine(count);

@@ -1,6 +1,6 @@
-using OpenTelemetry.Trace;
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
+using OpenTelemetry.Trace;
 
 namespace Umbra.Poc.Dump;
 
@@ -35,21 +35,25 @@ public class AdoMetrics
 
     private void ProcessUnFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
-        if (!runs.Any()) return;
+        if (!runs.Any())
+            return;
         var stateTotals = runs.GroupBy(r => r.Status)
-            .Select(g => new {Status = g.Key, Count = g.Count() });
+            .Select(g => new { Status = g.Key, Count = g.Count() });
 
-        foreach ( var group in stateTotals)
+        foreach (var group in stateTotals)
         {
             _runsUnfinishedGauge.Record(
                 group.Count,
-                new KeyValuePair<string, object?>("project", project.Name)
+                new KeyValuePair<string, object?>("project", project.Name),
+                new KeyValuePair<string, object?>("status", group.Status)
             );
         }
     }
+
     private void ProcessFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
-        if (!runs.Any()) return;
+        if (!runs.Any())
+            return;
         var now = DateTime.UtcNow;
         var newRuns = runs.Where(r => !_processedRuns.ContainsKey(r.Id)).ToList();
 
@@ -66,14 +70,21 @@ public class AdoMetrics
         }
 
         var cutoff = now.AddHours(-12);
-        var expiredRuns = _processedRuns.Where(kvp => kvp.Value < cutoff).Select(kvp => kvp.Key).ToList();
+        var expiredRuns = _processedRuns
+            .Where(kvp => kvp.Value < cutoff)
+            .Select(kvp => kvp.Key)
+            .ToList();
         foreach (var run in expiredRuns)
         {
             _processedRuns.TryRemove(run, out _);
         }
     }
 
-    public void ProcessRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs, IEnumerable<PipelineRunDto> unfinishedRuns)
+    public void ProcessRuns(
+        ProjectDto project,
+        IEnumerable<PipelineRunDto> runs,
+        IEnumerable<PipelineRunDto> unfinishedRuns
+    )
     {
         ProcessFinishedRuns(project, runs);
         ProcessUnFinishedRuns(project, unfinishedRuns);
