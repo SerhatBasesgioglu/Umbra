@@ -37,7 +37,7 @@ public class PipelineFetcher : BackgroundService
         var count = 0;
         foreach (var project in projects)
         {
-            if (project.Name != "Sandbox") continue;
+            //if (project.Name != "Sandbox") continue;
             Console.WriteLine($"Processing {project.Name}");
             var pipelineResponse = await _client.GetAsync<AdoList<PipelineDto>>(
                 $"{project.Id}/_apis/build/definitions"
@@ -58,8 +58,6 @@ public class PipelineFetcher : BackgroundService
                 $"{project.Id}/_apis/build/builds?statusFilter=inProgress,cancelling,postponed,notStarted"
             );
 
-            if (pipelineRunResponse.Count == 0 && unfinishedPipelineRunResponse.Count == 0)
-                continue;
             var pipelineRuns = pipelineRunResponse.Value;
             var unfinishedPipelineRuns = unfinishedPipelineRunResponse.Value;
 

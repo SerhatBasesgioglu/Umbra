@@ -35,6 +35,7 @@ public class AdoMetrics
 
     private void ProcessUnFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
+        if (!runs.Any()) return;
         var stateTotals = runs.GroupBy(r => r.Status)
             .Select(g => new {Status = g.Key, Count = g.Count() });
 
@@ -48,6 +49,7 @@ public class AdoMetrics
     }
     private void ProcessFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
+        if (!runs.Any()) return;
         var now = DateTime.UtcNow;
         var newRuns = runs.Where(r => !_processedRuns.ContainsKey(r.Id)).ToList();
 
