@@ -1,0 +1,19 @@
+using System.Text.Json.Serialization;
+
+public class WiqlDto
+{
+    public List<WorkItemDto> WorkItems { get; set; }
+}
+
+public class WorkItemDto
+{
+    public int Id { get; set; }
+    public string Url { get; set; }
+    public FieldDto Fields { get; set; }
+}
+
+public class FieldDto
+{
+    [JsonPropertyName("System.State")]
+    public string State { get; set; }
+}
