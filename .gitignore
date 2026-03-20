@@ -1,9 +1,14 @@
+#Dotnet Native
 obj
 bin
 .vs
 
-appsettings.json
-appsettings.Development.json
+#Dotnet Publish Artifacts
+publish
 
 #For container persistance
 container-data
+
+# TODO Configuration files, will enable them later on.
+appsettings.json
+appsettings.Development.json
