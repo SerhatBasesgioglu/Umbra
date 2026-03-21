@@ -65,7 +65,7 @@ public class PipelineFetcher : BackgroundService
                 .DistinctBy(r => r.Id)
                 .ToList();
 
-            _metrics.ProcessRuns(project, pipelineRuns, unfinishedPipelineRuns);
+            _metrics.ProcessRuns(project, allRuns);
             count += pipelineRunResponse.Count;
         }
         Console.WriteLine(count);
