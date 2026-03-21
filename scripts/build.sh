@@ -13,4 +13,4 @@ dotnet restore "$SRC_DIR/$PROJECT" /p:Configuration=Release
 dotnet build "$SRC_DIR/$PROJECT" --no-restore -c Release
 dotnet publish "$SRC_DIR/$PROJECT" --no-build -c Release -o "$REPO_ROOT/publish/$PROJECT"
 
-docker build -t test:latest --build-arg PUBLISH_PATH="./publish/$PROJECT" -f "$SRC_DIR/$PROJECT/Dockerfile" "$REPO_ROOT"
+docker build -t umbra-metrics:latest --build-arg PUBLISH_PATH="./publish/$PROJECT" -f "$SRC_DIR/$PROJECT/Dockerfile" "$REPO_ROOT"

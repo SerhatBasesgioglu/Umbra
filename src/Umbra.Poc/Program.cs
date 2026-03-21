@@ -1,4 +1,3 @@
-using System.IO.Pipelines;
 using OpenTelemetry.Metrics;
 using Umbra.Poc.Dump;
 
