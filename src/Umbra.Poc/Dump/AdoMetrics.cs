@@ -6,24 +6,46 @@ namespace Umbra.Poc.Dump;
 
 public class AdoMetrics
 {
-    private readonly Counter<long> _runsProcessedCounter;
-    private readonly Gauge<int> _runsUnfinishedGauge;
-    private readonly ConcurrentDictionary<int, DateTime> _processedRuns = new();
+    private readonly Counter<long> _runsQueuedCounter;
+    private readonly Counter<long> _runsStartedCounter;
+    private readonly Counter<long> _runsFinishedCounter;
+    private readonly Histogram<double> _runDuration;
+    private readonly Histogram<double> _queueDuration;
     private readonly Gauge<int> _workItemGauge;
+
+    private readonly ConcurrentDictionary<int, DateTime> _queuedRuns = new();
+    private readonly ConcurrentDictionary<int, DateTime> _startedRuns = new();
+    private readonly ConcurrentDictionary<int, DateTime> _finishedRuns = new();
 
     public AdoMetrics(IMeterFactory meterFactory)
     {
         var meter = meterFactory.Create("Umbra.Poc.Ado");
-        _runsProcessedCounter = meter.CreateCounter<long>(
-            "ado_runs_processed_total",
+        _runsQueuedCounter = meter.CreateCounter<long>(
+            "ado_runs_queued_total",
             unit: "{run}",
-            description: "Total number of runs seen by scraper"
+            description: "Total number of runs queued."
+        );
+        _runsStartedCounter = meter.CreateCounter<long>(
+            "ado_runs_started_total",
+            unit: "{run}",
+            description: "Total number of runs started."
+        );
+        _runsFinishedCounter = meter.CreateCounter<long>(
+            "ado_runs_finished_total",
+            unit: "{run}",
+            description: "Total number of runs finished."
         );
 
-        _runsUnfinishedGauge = meter.CreateGauge<int>(
-            "ado_runs_unfinished_count",
-            unit: "{run}",
-            description: "Current count of unfinished runs"
+        _runDuration = meter.CreateHistogram<double>(
+            "ado_run_duration_seconds",
+            unit: "s",
+            description: "Duration of completed runs"
+        );
+
+        _queueDuration = meter.CreateHistogram<double>(
+            "ado_queue_duration_seconds",
+            unit: "s",
+            description: "Queue duration of completed runs"
         );
 
         _workItemGauge = meter.CreateGauge<int>(
@@ -33,61 +55,57 @@ public class AdoMetrics
         );
     }
 
-    private void ProcessUnFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
+    public void ProcessRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
     {
         if (!runs.Any())
             return;
-        var stateTotals = runs.GroupBy(r => r.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() });
 
-        foreach (var group in stateTotals)
-        {
-            _runsUnfinishedGauge.Record(
-                group.Count,
-                new KeyValuePair<string, object?>("project", project.Name),
-                new KeyValuePair<string, object?>("status", group.Status)
-            );
-        }
+        var newQueuedRuns = runs.Where(r => r.QueueTime > DateTime.MinValue).ToList();
+        var newStartedRuns = runs.Where(r => r.StartTime > DateTime.MinValue).ToList();
+        var newFinishedRuns = runs.Where(r => r.FinishTime > DateTime.MinValue).ToList();
+
+        ProcessCount(newQueuedRuns, project, _runsQueuedCounter, _queuedRuns);
+        ProcessCount(newStartedRuns, project, _runsStartedCounter, _startedRuns);
+        ProcessCount(newFinishedRuns, project, _runsFinishedCounter, _finishedRuns);
     }
 
-    private void ProcessFinishedRuns(ProjectDto project, IEnumerable<PipelineRunDto> runs)
+    private void ProcessCount(
+        IEnumerable<PipelineRunDto> runs,
+        ProjectDto project,
+        Counter<long> counter,
+        ConcurrentDictionary<int, DateTime> processed
+    )
     {
-        if (!runs.Any())
-            return;
         var now = DateTime.UtcNow;
-        var newRuns = runs.Where(r => !_processedRuns.ContainsKey(r.Id)).ToList();
-
-        foreach (var run in newRuns)
+        foreach (var run in runs)
         {
             string pipelineName = SanitizeLabel(run.Definition.Name);
-            _runsProcessedCounter.Add(
-                1,
-                new KeyValuePair<string, object?>("result", run.Result),
-                new KeyValuePair<string, object?>("project", project.Name),
-                new KeyValuePair<string, object?>("pipeline", pipelineName)
-            );
-            _processedRuns.TryAdd(run.Id, run.FinishTime);
+
+            var isNewRun = processed.TryAdd(run.Id, now);
+            if (isNewRun)
+            {
+                counter.Add(
+                    1,
+                    new KeyValuePair<string, object?>("result", run.Result),
+                    new KeyValuePair<string, object?>("project", project.Name),
+                    new KeyValuePair<string, object?>("pipeline", pipelineName)
+                );
+            }
+            else
+            {
+                processed[run.Id] = now;
+            }
         }
 
         var cutoff = now.AddHours(-12);
-        var expiredRuns = _processedRuns
+        var expiredRuns = processed
             .Where(kvp => kvp.Value < cutoff)
             .Select(kvp => kvp.Key)
             .ToList();
         foreach (var run in expiredRuns)
         {
-            _processedRuns.TryRemove(run, out _);
+            processed.TryRemove(run, out _);
         }
-    }
-
-    public void ProcessRuns(
-        ProjectDto project,
-        IEnumerable<PipelineRunDto> runs,
-        IEnumerable<PipelineRunDto> unfinishedRuns
-    )
-    {
-        ProcessFinishedRuns(project, runs);
-        ProcessUnFinishedRuns(project, unfinishedRuns);
     }
 
     public void ProcessWorkItems(List<WorkItemDto> workItems)

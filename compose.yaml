@@ -4,7 +4,7 @@ services:
     container_name: prometheus
     restart: unless-stopped
     volumes:
-      - ./container-data/prometheus:/prometheus
+      #- ./container-data/prometheus:/prometheus
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
     network_mode: host # Will change this later on
     # ports:
