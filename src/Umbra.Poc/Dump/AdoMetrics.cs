@@ -64,9 +64,31 @@ public class AdoMetrics
         var newStartedRuns = runs.Where(r => r.StartTime > DateTime.MinValue).ToList();
         var newFinishedRuns = runs.Where(r => r.FinishTime > DateTime.MinValue).ToList();
 
+        RecordDurations(project, newFinishedRuns);
         ProcessCount(newQueuedRuns, project, _runsQueuedCounter, _queuedRuns);
         ProcessCount(newStartedRuns, project, _runsStartedCounter, _startedRuns);
         ProcessCount(newFinishedRuns, project, _runsFinishedCounter, _finishedRuns);
+    }
+
+    private void RecordDurations(ProjectDto project, IEnumerable<PipelineRunDto> runs)
+    {
+        foreach (var run in runs)
+        {
+            string pipelineName = SanitizeLabel(run.Definition.Name);
+            var queueDuration = (run.StartTime - run.QueueTime).TotalSeconds;
+            var runDuration = (run.FinishTime - run.StartTime).TotalSeconds;
+
+            _queueDuration.Record(
+                queueDuration,
+                new KeyValuePair<string, object?>("project", project.Name),
+                new KeyValuePair<string, object?>("pipeline", pipelineName)
+            );
+            _runDuration.Record(
+                runDuration,
+                new KeyValuePair<string, object?>("project", project.Name),
+                new KeyValuePair<string, object?>("pipeline", pipelineName)
+            );
+        }
     }
 
     private void ProcessCount(

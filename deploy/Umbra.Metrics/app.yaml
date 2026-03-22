@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: devops
+  name: umbra-metrics
+  labels:
+    app: umbra-metrics
+spec:
+  selector:
+    matchLabels:
+      app: umbra-metrics
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: umbra-metrics
+    spec:
+      serviceAccountName: devops
+      containers:
+      - name: umbra-metrics
+        image: <image>
+        ports:
+          - containerPort: 5000
+            protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: umbra-metrics
+  namespace: devops
+  labels:
+    app: umbra-metrics
+spec:
+  selector:
+    app: umbra-metrics
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 5000
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: umbra-metrics
+  namespace: devops
+spec:
+  path: /
+  to:
+    name: umbra-metrics
+    weight: 100
+    kind: Service
+  host: '<host>'

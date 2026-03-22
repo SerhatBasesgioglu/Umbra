@@ -9,6 +9,9 @@ publish
 #For container persistance
 container-data
 
+# Deploy manifests with internal data
+internal-manifests
+
 # TODO Configuration files, will enable them later on.
 appsettings.json
 appsettings.Development.json
