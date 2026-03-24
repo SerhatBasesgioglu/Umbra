@@ -5,4 +5,4 @@ ARG PUBLISH_PATH
 
 COPY ${PUBLISH_PATH} .
 
-ENTRYPOINT ["dotnet", "Umbra.Poc.dll"]
+ENTRYPOINT ["dotnet", "Umbra.Metrics.dll"]

@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 using OpenTelemetry.Trace;
 
-namespace Umbra.Poc.Dump;
+namespace Umbra.Metrics.Dump;
 
 public class AdoMetrics
 {
@@ -19,7 +19,7 @@ public class AdoMetrics
 
     public AdoMetrics(IMeterFactory meterFactory)
     {
-        var meter = meterFactory.Create("Umbra.Poc.Ado");
+        var meter = meterFactory.Create("Umbra.Metrics.Ado");
         _runsQueuedCounter = meter.CreateCounter<long>(
             "ado_runs_queued_total",
             unit: "{run}",

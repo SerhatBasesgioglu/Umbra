@@ -1,5 +1,5 @@
 using OpenTelemetry.Metrics;
-using Umbra.Poc.Dump;
+using Umbra.Metrics.Dump;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +12,7 @@ builder
         builder.AddMeter(
             "Microsoft.AspNetCore.Hosting",
             "Microsoft.AspNetCore.Server.Kestrel",
-            "Umbra.Poc.Ado"
+            "Umbra.Metrics.Ado"
         );
     });
 

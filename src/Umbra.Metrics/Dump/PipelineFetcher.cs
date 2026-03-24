@@ -1,4 +1,4 @@
-﻿namespace Umbra.Poc.Dump;
+﻿namespace Umbra.Metrics.Dump;
 
 public class PipelineFetcher : BackgroundService
 {

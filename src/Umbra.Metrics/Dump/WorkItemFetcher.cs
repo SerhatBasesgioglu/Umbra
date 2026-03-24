@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Umbra.Poc.Dump;
+namespace Umbra.Metrics.Dump;
 
 public class WorkItemFetcher : BackgroundService
 {

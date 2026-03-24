@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Umbra.Poc.Dump;
+using Umbra.Metrics.Dump;
 
-namespace Umbra.Poc.Controllers;
+namespace Umbra.Metrics.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
