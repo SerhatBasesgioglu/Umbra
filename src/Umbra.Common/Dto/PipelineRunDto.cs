@@ -1,3 +1,5 @@
+namespace Umbra.Common.Dto;
+
 public class PipelineRunDto
 {
     public int Id { get; set; }

@@ -1,3 +1,5 @@
+namespace Umbra.Common.Dto;
+
 public class AdoList<T>
 {
     public int Count { get; set; }

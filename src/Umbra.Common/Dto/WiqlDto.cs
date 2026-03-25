@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+namespace Umbra.Common.Dto;
+
 public class WiqlDto
 {
     public List<WorkItemDto> WorkItems { get; set; }

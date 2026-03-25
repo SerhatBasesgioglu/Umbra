@@ -1,3 +1,5 @@
+namespace Umbra.Common.Dto;
+
 public class ProjectDto
 {
     public string Name { get; set; }

@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
-using OpenTelemetry.Trace;
+using Umbra.Common.Dto;
 
 namespace Umbra.Metrics.Dump;
 

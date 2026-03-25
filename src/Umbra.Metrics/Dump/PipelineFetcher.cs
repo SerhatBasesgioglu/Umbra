@@ -1,4 +1,7 @@
-﻿namespace Umbra.Metrics.Dump;
+﻿using Umbra.Common.Dto;
+using Umbra.Common.Dump;
+
+namespace Umbra.Metrics.Dump;
 
 public class PipelineFetcher : BackgroundService
 {

@@ -12,4 +12,8 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Umbra.Common\Umbra.Common.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,7 @@
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+
+namespace Umbra.Common.Dump;
 
 public class AzureDevOpsHttpClient
 {
