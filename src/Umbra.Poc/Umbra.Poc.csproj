@@ -11,4 +11,8 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.13.14" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Umbra.Common\Umbra.Common.csproj" />
+  </ItemGroup>
+
 </Project>
