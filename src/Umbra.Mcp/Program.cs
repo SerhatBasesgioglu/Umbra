@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Umbra.Common.Dump;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole(consoleLogOptions =>
@@ -14,6 +15,9 @@ builder.Services
     .AddMcpServer()
     .WithHttpTransport()
     .WithToolsFromAssembly();
+
+builder.Services.AddTransient<AzureDevOpsHttpClient>();
+builder.Services.AddTransient<AzureDevOpsService>();
 
 builder.Services.AddSingleton(_ => {
     var client = new HttpClient();

@@ -19,3 +19,10 @@ public class FieldDto
     [JsonPropertyName("System.State")]
     public string State { get; set; }
 }
+
+public class PatchDto
+{
+    public string Op { get; set; }
+    public string Path { get; set; }
+    public string Value { get; set; }
+}
