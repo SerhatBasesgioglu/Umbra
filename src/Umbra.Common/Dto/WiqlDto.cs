@@ -18,6 +18,8 @@ public class FieldDto
 {
     [JsonPropertyName("System.State")]
     public string State { get; set; }
+    [JsonPropertyName("System.Title")]
+    public string Title { get; set; }
 }
 
 public class PatchDto

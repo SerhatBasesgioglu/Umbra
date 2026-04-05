@@ -8,7 +8,7 @@ public class AzureDevOpsService(AzureDevOpsHttpClient client)
 
     public async Task<List<ProjectDto>> GetProjectsAsync()
     {
-        var response = await _client.GetAsync<AdoList<ProjectDto>>("_apis/projects");
+        var response = await _client.GetAsync<AdoList<ProjectDto>>("_apis/projects?$top=1000");
         return response.Value;
     }
 
@@ -34,7 +34,11 @@ public class AzureDevOpsService(AzureDevOpsHttpClient client)
         var uri = "Sandbox/_apis/wit/workitemsbatch";
         foreach (var batch in pbis.Chunk(200))
         {
-            var body = new { ids = batch, fields = new[] { "System.Id", "System.State" } };
+            var body = new
+            {
+                ids = batch,
+                fields = new[] { "System.Id", "System.State", "System.Title" },
+            };
             var result = await _client.PostAsync<AdoList<WorkItemDto>>(uri, body);
             allWorkItems.AddRange(result.Value);
         }
