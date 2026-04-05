@@ -6,9 +6,10 @@ namespace Umbra.Poc.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TestController(AzureDevOpsHttpClient client) : ControllerBase
+public class TestController(AzureDevOpsHttpClient client, AzureDevOpsService service) : ControllerBase
 {
     private readonly AzureDevOpsHttpClient _client = client;
+    private readonly AzureDevOpsService _service = service;
 
     [HttpGet]
     public async Task<List<WorkItemDto>> Get()
@@ -39,5 +40,10 @@ public class TestController(AzureDevOpsHttpClient client) : ControllerBase
             allWorkItems.AddRange(workItems);
         }
         return allWorkItems;
+    }
+
+    [HttpGet("yo")]
+    public async Task<List<ProjectDto>>GetProjects(){
+      return await _service.GetProjectsAsync();
     }
 }
